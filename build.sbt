@@ -2,17 +2,16 @@ val DSE_HOME = sys.env.getOrElse("DSE_HOME", sys.env("HOME")+"dse")
 val sparkClasspathStr = s"dse spark-classpath".!!.trim
 val sparkClasspathArr = sparkClasspathStr.split(':')
 
-val dseScalaVersionStr = Seq("/bin/sh", "-c", s"ls ${DSE_HOME}/resources/spark/lib/scala-compiler*jar").!!.trim
+val dseScalaVersionStr = Seq("/bin/sh", "-c", s"find ${DSE_HOME} -name 'scala-compiler*.jar'").!!.trim
 val dseScalaVersionArr = dseScalaVersionStr.split("-").last.split(".jar")(0).split('.')
 val dseScalaVersion = dseScalaVersionArr.mkString(".") 
 val dseScalaMajorMinorVersion = Seq(dseScalaVersionArr(0), dseScalaVersionArr(1)).mkString(".") 
 
-val DSE_BIN = s"$DSE_HOME/bin/dse"
-val dseVersionArr = s"$DSE_BIN -v".!!.trim.split('.')
+val dseVersionArr = Seq("/bin/sh", "-c", s"$$(which dse) -v").!!.trim
 val dseVersion = Seq(dseVersionArr(0), dseVersionArr(1)).mkString(".")
 
 // This needs to match whatever Spark version being used in DSE
-val sparkVersionStr = Seq("/bin/sh", "-c", s"ls ${DSE_HOME}/resources/spark/lib/spark-core_*jar").!!.trim
+val sparkVersionStr = Seq("/bin/sh", "-c", s"find ${DSE_HOME} -name 'spark-core_*jar'").!!.trim
 val sparkVersionArr = sparkVersionStr.split('-')(2).split('.') // expected: spark-core_2.11-2.0.0.1-2cf48f7.jar
 val sparkVersion = Seq(sparkVersionArr(0), sparkVersionArr(1), sparkVersionArr(2)).mkString(".")
 val kafkaVersion = "0.8.2.1" // we'll want to generalize this once spark officially supports newer versions
