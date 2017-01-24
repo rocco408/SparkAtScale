@@ -82,10 +82,9 @@ object StreamingDirectEmails {
       // Update the cumulative count of emails received using mapWithState
       // This will give a DStream made of state (which is the cumulative count of the keys)
       val mappingFunc = (email_key: String, email_body: Option[String], state: State[Long]) => {
-          var newMessageCount:Option[Long] = None 
 
           // Check if state exists
-          newMessageCount = Some(if (state.exists) (state.get + 1L) else 0L)
+          val newMessageCount = Some(if (state.exists) (state.get + 1L) else 0L)
           state.update(newMessageCount.get)    // Set the new state
           (email_key, state.get) 
       }
