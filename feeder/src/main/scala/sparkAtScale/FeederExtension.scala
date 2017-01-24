@@ -16,7 +16,8 @@ class FeederExtension(system: ExtendedActorSystem) extends Extension {
   val kafkaHost = systemConfig.getString("sparkAtScale.kafkaHost")
   println(s"kafkaHost $kafkaHost")
   val kafkaTopic = systemConfig.getString("sparkAtScale.kafkaTopic")
-
+  val numKafkaKeys= systemConfig.getInt("sparkAtScale.numKafkaKeys")
+  println(s"numKafkaKeys $numKafkaKeys")
   val props = new Properties()
   props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHost)
   props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer")

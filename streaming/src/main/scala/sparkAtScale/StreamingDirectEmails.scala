@@ -10,7 +10,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{SQLContext, SaveMode}
 import org.apache.spark.streaming.kafka.{KafkaUtils,OffsetRange,HasOffsetRanges}
-import org.apache.spark.streaming.{Milliseconds, StreamingContext, Time}
+import org.apache.spark.streaming.{Milliseconds, StreamingContext, Time, StateSpec, State}
 import org.joda.time.DateTime
 
 /** This uses the Kafka Direct introduced in Spark 1.4
@@ -79,6 +79,17 @@ object StreamingDirectEmails {
       //println(s"ssc: $ssc")
       println(s"kafkaParams: $kafkaParams")
 
+      // Update the cumulative count of emails received using mapWithState
+      // This will give a DStream made of state (which is the cumulative count of the keys)
+      val mappingFunc = (email_key: String, email_body: Option[String], state: State[Long]) => {
+          var newMessageCount:Option[Long] = None 
+
+          // Check if state exists
+          newMessageCount = Some(if (state.exists) (state.get + 1L) else 0L)
+          state.update(newMessageCount.get)    // Set the new state
+          (email_key, state.get) 
+      }
+
       val emailsStream = {
           if (streamType == "direct") {
                 val topics = Set(topicName)
@@ -104,12 +115,10 @@ object StreamingDirectEmails {
           }
          
       }
-      /*
-      println("\n\nTesting and debugging type(emailsStream)")
-      println(emailsStream.asInstanceOf[AnyRef].getClass.getSimpleName)
-      emailsStream.foreachRDD { println(rdd) }
-      println("\n\n")
-      */
+
+      val stateSpec = StateSpec.function(mappingFunc)
+      val stateDstream = emailsStream.map(x => (x._1, x._2)).mapWithState(stateSpec)
+      stateDstream.print() // this should dump the running count (state) of the unique kafka keys received
       
       emailsStream.foreachRDD {
         (message: RDD[(String, String)], batchTime: Time) => {
@@ -132,7 +141,8 @@ object StreamingDirectEmails {
           import sqlContext.implicits._
 
           // convert each RDD from the batch into a Email DataFrame
-          //email data has the format msg_id:tenant_id:mailbox_id:time_delivered:time_forwarded:time_read:time_replied
+          // email data has the format msg_id:tenant_id:mailbox_id:time_delivered:time_forwarded:time_read:time_replied
+
           val df = message.map {
             case (key, nxtEmail) => nxtEmail.split("::")
           }.map(email => {
@@ -170,8 +180,6 @@ object StreamingDirectEmails {
     val ssc = StreamingContext.getActiveOrCreate(checkpoint_path, createStreamingContext, hadoopConf)
     */
     val ssc = StreamingContext.getActiveOrCreate(checkpoint_path, createStreamingContext)
-
-
 
     ssc.start()
     ssc.awaitTermination()
