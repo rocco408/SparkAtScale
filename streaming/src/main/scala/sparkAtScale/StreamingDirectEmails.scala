@@ -129,7 +129,7 @@ object StreamingDirectEmails {
               //println("Classname of message is: "+message.asInstanceOf[AnyRef].getClass.getSimpleName)
               offsetRanges = message.asInstanceOf[HasOffsetRanges].offsetRanges
               for (o <- offsetRanges) {
-                 println(s"\nTopic: ${o.topic} Partition: ${o.partition} FromOffset: ${o.fromOffset} UntilOffset: ${o.untilOffset}")
+                 println(s"Topic: ${o.topic} Partition: ${o.partition} FromOffset: ${o.fromOffset} UntilOffset: ${o.untilOffset}")
               }
           }
 
