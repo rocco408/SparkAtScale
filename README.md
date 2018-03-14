@@ -59,7 +59,7 @@ Parameters:
 
 8. kafka stream type: ex. direct or receiver
 
-9. number of partitions to consume per topic (controls read parallelism) (receiver approach: you'll want to match whatever used when creating the topic) 
+9. number of receivers to create (controls read parallelism) (receiver approach: typically this should be the number of nodes in the cluster) 
 
 10. processesing parallelism (controls write parallelism) (receiver approach: you'll want to match whatever used when creating the topic) 
 

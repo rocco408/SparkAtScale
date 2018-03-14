@@ -29,8 +29,8 @@ object StreamingDirectEmails {
       println("6th param is the auto.offset.reset type (smallest|largest)") 
       println("7th param is the topic name") 
       println("8th param is the type of kafka stream (direct|receiver)") 
-      println("9th param is the number of partitions to consume per topic (used with receiver-based input stream)") 
-      println("10th param is the amount of parallelism used for processing data (used with receiver-based input stream)") 
+      println("9th param is the number of receivers used to ingest data from kafka (used with receiver-based input stream)")
+      println("10th param is the amount of parallelism used for processing data (e.g. writing to db) (used with receiver-based input stream)")
       println("11th param is the group.id that id's the consumer processes (used with receiver-based input stream)") 
       println("12th param is the zookeeper connect string (e.g. localhost:2181) (used with receiver-based input stream)") 
     }
@@ -43,7 +43,7 @@ object StreamingDirectEmails {
     val offsetResetType = args(5)
     val topicName = args(6)
     val streamType = args(7)
-    val numPartitions = args(8).toInt
+    val numReceivers = args(8).toInt
     val processingParallelism = args(9).toInt
     val groupId = args(10)
     val zookeeper = args(11)
@@ -98,13 +98,14 @@ object StreamingDirectEmails {
                 
                 // Controls the number of inpout dstreams
                 //KafkaUtils.createStream[String, String, StringDecoder, StringDecoder](newSsc, kafkaParams, topics, storageLevel) // one
-                val streams = (1 to numPartitions) map { _ => 
+                val streams = (1 to numReceivers) map { _ =>
                   //KafkaUtils.createStream[String, String, StringDecoder, StringDecoder](newSsc, kafkaParams, topics, storageLevel).map(_._2)
                   KafkaUtils.createStream[String, String, StringDecoder, StringDecoder](newSsc, kafkaParams, topics, storageLevel)
                 }
 
                 val unifiedStream = newSsc.union(streams)
-                // below is way to change parallelism for downstream processing, for now we'll stick with numPartitions
+                // below is a way to change parallelism for downstream processing, to make comparisons cleaner with the
+                // direct API we should set processingParallelism == number of kafka partitions
                 unifiedStream.repartition(processingParallelism)
                 //unifiedStream
               

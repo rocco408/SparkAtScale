@@ -73,13 +73,7 @@ class EmailFeederActor(tickInterval:FiniteDuration) extends Actor with ActorLogg
           if (exception != null) log.info("Failed to send email_record: " + exception)
           else {
             emailsDelivered += 1
-            // Only output 5% because this output can get huge
-            if (randGen.nextInt(100) < 5) {
-              println(s"Number of emails successfully delivered to Kafka: $emailsDelivered msg_id: ${nxtEmail.msg_id} tenant_id: ${nxtEmail.tenant_id} mailbox_id: ${nxtEmail.mailbox_id}")
-              //periodically log the num of messages sent
-              //if (emailsSent % 20987 == 0)
-              //  log.info(s"emailsSent = $emailsSent  //  result partition: ${result.partition()}")
-            }
+            println(s"Number of emails successfully delivered to Kafka: $emailsDelivered msg_id: ${nxtEmail.msg_id} tenant_id: ${nxtEmail.tenant_id} mailbox_id: ${nxtEmail.mailbox_id}")
           }
         }
       })
